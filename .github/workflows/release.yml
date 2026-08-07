@@ -1,7 +1,10 @@
 name: Release
 
 # Tag-driven publish: push a `v*.*.*` tag → build, verify, publish with provenance.
-# Manual `npm publish` is blocked by package.json prepublishOnly.
+# CI-only: manual `npm publish` is blocked by package.json prepublishOnly.
+# Auth: npm Trusted Publishing (OIDC) — no token needed (package bootstrapped,
+# Trusted Publisher configured on npmjs.com). Provenance is AUTOMATIC under
+# trusted publishing; --provenance also covers the optional NPM_TOKEN fallback.
 #
 # Auth (pick ONE — see docs/PUBLISHING.md):
 #
@@ -39,11 +42,12 @@ jobs:
 
       # No registry-url here: setup-node would write
       #   //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
-      # and an empty token silently breaks OIDC trusted publishing.
+      # and an empty token silently breaks OIDC trusted publishing
+      # (actions/setup-node#1551).
+      # No cache: npm recommends package-manager-cache: false in release builds.
       - uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: npm
 
       # Trusted publishing requires npm >= 11.5.1 (and Node >= 22.14).
       - name: Ensure npm supports OIDC trusted publishing
@@ -51,6 +55,18 @@ jobs:
           npm install -g npm@latest
           node -v
           npm -v
+
+      # Fail fast with a clear message if OIDC/provenance prereqs slip,
+      # instead of a cryptic error at publish time.
+      - name: Verify OIDC / provenance prerequisites
+        run: |
+          node -e "const[M,m]=process.versions.node.split('.').map(Number);if(M<22||(M===22&&m<14)){console.error('Node >=22.14 required for trusted publishing/provenance, got '+process.version);process.exit(1)}"
+          v=$(npm -v); major=$(echo "$v" | cut -d. -f1); minor=$(echo "$v" | cut -d. -f2)
+          if [ "$major" -lt 11 ] || { [ "$major" -eq 11 ] && [ "$minor" -lt 5 ]; }; then
+            echo "✖ npm >=11.5.1 required for trusted publishing/provenance, got $v"
+            exit 1
+          fi
+          echo "✓ prerequisites met (node $(node -v), npm $v)"
 
       - run: npm ci
       - run: npm run typecheck

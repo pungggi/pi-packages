@@ -51,12 +51,14 @@
     ]
   },
   "scripts": {
+    "prepublishOnly": "node -e \"if(!process.env.CI)throw new Error('publish via release.yml CI: push a v* tag. Manual npm publish is blocked.')\"",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run test"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   }
 }
