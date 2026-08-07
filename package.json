@@ -1,6 +1,6 @@
 {
   "name": "pi-packages",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "In-TUI package manager for pi. Adds /packages that lists every configured package with version numbers, detects available updates on demand, and installs / updates / removes packages by orchestrating the pi CLI.",
   "keywords": [
     "pi-package",
