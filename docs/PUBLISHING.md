@@ -1,9 +1,32 @@
 # Publishing `pi-packages`
 
-`pi-packages` publishes to npm **from CI only** (tag-driven GitHub Actions).
-Manual `npm publish` is blocked by `package.json` → `prepublishOnly`. This file
-is the per-package companion to the parent [`AGENTS.md`](../../AGENTS.md) release
-rules — read that first.
+> **Current state (temporary override — remember this):** manual local publish
+> is **unblocked for now** so it's easy to publish without an `NPM_TOKEN`/CI
+> bootstrap. `prepublishOnly` (CI guard) and `publishConfig.provenance` are
+> **removed**, so you can publish straight from the laptop with your npm login
+> + 2FA. `release.yml` is left in place for the future CI/OIDC path.
+>
+> **TODO before depending on CI:** re-add `prepublishOnly` + `publishConfig.provenance`,
+> then bootstrap OIDC per the *First publish* / *Steady state* sections below.
+> This is a deliberate, per-package deviation from the parent `AGENTS.md`
+> "never publish from a laptop" rule.
+
+This file is the per-package companion to the parent [`AGENTS.md`](../../AGENTS.md)
+release rules.
+
+## Quick local publish (current method)
+
+```bash
+cd ~/source/pi/packages/pi-packages
+npm run check
+npm version patch -m "release: %s"   # bumps package.json + commits/tags locally; do NOT push the tag if you want to stay off CI
+npm publish --access public           # uses your npm login + 2FA, no token needed
+npm view pi-packages version
+```
+
+> If you `git push --follow-tags`, the `v*` tag will also trigger `release.yml`
+> in CI — skip pushing the tag (or delete it: `git tag -d vX.Y.Z`) to keep this
+> a purely local publish.
 
 ## Identity
 
